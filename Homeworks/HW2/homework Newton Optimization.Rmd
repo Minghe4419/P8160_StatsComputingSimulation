@@ -14,8 +14,10 @@ In this problem, you will compare three common methods for univariate minimizati
 
 ## Function A:
 $$f_1(x) = \ln(1+x^2)+x^2$$
+
 ## Function B:
 $$f_2(x) = x^4 -6x^2+4x+8$$
+
 ## Answer the following questions:
 
 \begin{enumerate}
