@@ -1,26 +1,26 @@
----
-title: "Homework 1"
-author: "Minghe Wang"
-date: "`r Sys.Date()`"
-output: github_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+Homework 1
+================
+Minghe Wang
+2025-03-07
 
 # Problem 1: Generating Weibull-Distributed Random Numbers
 
-The **Weibull distribution** is commonly used in reliability engineering and survival analysis. The PDF is:
+The **Weibull distribution** is commonly used in reliability engineering
+and survival analysis. The PDF is:
 
 $$ f(x) = \frac{k}{\lambda} \left( \frac{x}{\lambda} \right)^{k-1} e^{-(x/\lambda)^k}, \quad x > 0. $$
 
 ### **Tasks**
-1. Implement an R function to generate **1000 Weibull-distributed random numbers** using the inverse CDF method, with parameters \( k = 2 \) and \( \lambda = 1.5 \).
-2. Plot a histogram of the generated samples and overlay the theoretical density.
-3. Compute and compare the sample mean and variance with the theoretical values.
 
-```{r weibull-simulation}
+1.  Implement an R function to generate **1000 Weibull-distributed
+    random numbers** using the inverse CDF method, with parameters
+    $k = 2$ and $\lambda = 1.5$.
+2.  Plot a histogram of the generated samples and overlay the
+    theoretical density.
+3.  Compute and compare the sample mean and variance with the
+    theoretical values.
+
+``` r
 # 1. Implement inverse CDF function
 generate_wb <- function(n, k, lambda) {
   u <- runif(n)
@@ -40,8 +40,11 @@ randWb <- generate_wb(n, k, lambda)
 hist(randWb, probability = TRUE, main = paste('Weibull Distribution, k =', k, ', lambda =', lambda), xlab = 'x')
 curve((k / lambda) * ((x / lambda)^(k - 1)) * exp(- (x / lambda)^k), from = 0, to = max(randWb), add = TRUE, col = 'red')
 legend("topright", legend = "Theoretical Density", col = "red", lwd = 1)
+```
 
+![](Homework1--1---2-_files/figure-gfm/weibull-simulation-1.png)<!-- -->
 
+``` r
 # 3. compare mean and variance with theoretical values
 sampleWb_mean <- mean(randWb)
 sampleWb_var <- var(randWb)
@@ -50,25 +53,35 @@ theoreticalWb_mean <- lambda * gamma(1 + 1/k)
 theoreticalWb_var <- lambda^2 * (gamma(1 + 2/k) - (gamma(1 + 1/k))^2)
 
 cat("Sample mean = ", sampleWb_mean, '; theoretical mean = ', theoreticalWb_mean)
-cat("Sample variance = ", sampleWb_var, '; theoretical variance = ', theoreticalWb_var)
-
 ```
 
----
+    ## Sample mean =  1.313484 ; theoretical mean =  1.32934
+
+``` r
+cat("Sample variance = ", sampleWb_var, '; theoretical variance = ', theoreticalWb_var)
+```
+
+    ## Sample variance =  0.4672501 ; theoretical variance =  0.4828541
+
+------------------------------------------------------------------------
 
 # Problem 2: Generating Geometric-Distributed Random Numbers
 
-The **Geometric distribution** models the number of trials until the first success. The PDF is:
+The **Geometric distribution** models the number of trials until the
+first success. The PDF is:
 
 $$ f(x) = p (1 - p)^{x-1}, \quad x = 1, 2, 3, \ldots $$
 
-
 ### **Tasks**
-1. Implement an R function to generate **1000 Geometric-distributed random numbers** with \( p = 0.3 \).
-2. Plot a barplot of the generated numbers and overlay the theoretical PMF.
-3. Compute and compare the sample mean and variance with theoretical values.
 
-```{r geometric-simulation}
+1.  Implement an R function to generate **1000 Geometric-distributed
+    random numbers** with $p = 0.3$.
+2.  Plot a barplot of the generated numbers and overlay the theoretical
+    PMF.
+3.  Compute and compare the sample mean and variance with theoretical
+    values.
+
+``` r
 library(ggplot2)
 # 1. Implement inverse CDF function
 generate_geom <- function(n, p) {
@@ -96,7 +109,17 @@ ggplot(df_randGeom, aes(x = x)) +
   geom_line(data = df_randGeom_theo, aes(x = x, y = pmf, group = 1), 
             color = "red") +
   labs(title = paste("Geometric Distribution (p =", p, ")"))
+```
 
+    ## Warning: The dot-dot notation (`..prop..`) was deprecated in ggplot2 3.4.0.
+    ## ℹ Please use `after_stat(prop)` instead.
+    ## This warning is displayed once every 8 hours.
+    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+    ## generated.
+
+![](Homework1--1---2-_files/figure-gfm/geometric-simulation-1.png)<!-- -->
+
+``` r
 # 3. 
 sampleGeom_mean <- mean(randGeom)
 sampleGeom_var <- var(randGeom)
@@ -105,29 +128,40 @@ theoreticalGeom_mean <- 1/p
 theoreticalGeom_var <- (1 - p) / (p^2)
 
 cat("Sample mean = ", sampleGeom_mean, '; theoretical mean = ', theoreticalGeom_mean)
+```
+
+    ## Sample mean =  3.254 ; theoretical mean =  3.333333
+
+``` r
 cat("Sample variance = ", sampleGeom_var, '; theoretical variance = ', theoreticalGeom_var)
 ```
 
----
+    ## Sample variance =  7.092577 ; theoretical variance =  7.777778
 
-# Problem 3: Pareto Distribution - Inverse CDF vs. Acceptance-Rejection
+------------------------------------------------------------------------
 
+# Problem 3: Pareto Distribution - Inverse CDF vs. Acceptance-Rejection
 
-The Pareto distribution is used in economics, finance, and other fields. The PDF is:
+The Pareto distribution is used in economics, finance, and other fields.
+The PDF is:
 
 $$ f(x) = \frac{\alpha x_m^\alpha}{x^{\alpha+1}}, \quad x \geq x_m. $$
 
 We compare two methods for generating Pareto-distributed samples:
 
-1. **Inverse CDF Method:** 
-2. **Acceptance-Rejection Method:** choosing your own approximation distribution and accept threshold $M$.
+1.  **Inverse CDF Method:**
+2.  **Acceptance-Rejection Method:** choosing your own approximation
+    distribution and accept threshold $M$.
 
 ### **Tasks**
-1. Implement both methods for \( x_m = 1 \), \( \alpha = 2.5 \).
-2. What is the acceptance rate for the Acceptance-Rejection method? What if choosing different accept threshold?
-3. Plot histograms of the generated samples from both methods and compare
 
-```{r pareto-simulation}
+1.  Implement both methods for $x_m = 1$, $\alpha = 2.5$.
+2.  What is the acceptance rate for the Acceptance-Rejection method?
+    What if choosing different accept threshold?
+3.  Plot histograms of the generated samples from both methods and
+    compare
+
+``` r
 set.seed(20250217)
 # Inverse CDF
 generate_pareto_inverse <- function(n, x_m, alpha) {
@@ -158,31 +192,53 @@ randPareto_pareto_ar2 <- generate_pareto_ar(x_m=xm, alpha=alph, M=M2, x=x_candid
 
 # 3. Plot histograms
 hist(randPareto_inverse)
-hist(randPareto_pareto_ar) 
+```
 
+![](Homework1--1---2-_files/figure-gfm/pareto-simulation-1.png)<!-- -->
+
+``` r
+hist(randPareto_pareto_ar) 
+```
+
+![](Homework1--1---2-_files/figure-gfm/pareto-simulation-2.png)<!-- -->
+
+``` r
 paste("For Question2, the acceptance rate M is", M, ". If we increase the `M`, the acceptance rate will be smaller. So there 
 will be less accepted values", length(randPareto_pareto_ar2), " in our example of M = ", M2, ", making this method not 
 as efficient. If we decrease the M, the acceptance ratio might be greater than 1.")
+```
 
+    ## [1] "For Question2, the acceptance rate M is 3.92699081698724 . If we increase the `M`, the acceptance rate will be smaller. So there \nwill be less accepted values 228  in our example of M =  4.71238898038469 , making this method not \nas efficient. If we decrease the M, the acceptance ratio might be greater than 1."
+
+``` r
 cat("For Question3, histograms of Inverse CDF and Acceptance-Rejection Methods are both heavily right-skewed, while the 
 Inverse CDF method generate random samples with larger values at tails than ar method.")
 ```
 
----
+    ## For Question3, histograms of Inverse CDF and Acceptance-Rejection Methods are both heavily right-skewed, while the 
+    ## Inverse CDF method generate random samples with larger values at tails than ar method.
+
+------------------------------------------------------------------------
 
 # Problem 4: Monte Carlo Estimation with Semicircle Distribution
 
-The **semicircle distribution** is used in physics and materials science. The PDF is:
+The **semicircle distribution** is used in physics and materials
+science. The PDF is:
 
 $$ f(x) = \frac{2}{\pi \beta^2} \sqrt{\beta^2 - x^2}, \quad -\beta \leq x \leq \beta. $$
 
-The expected stress intensity factor follows this distribution with \( \beta = 2 \). We estimate the expected value using Acceptance-Rejection method.
+The expected stress intensity factor follows this distribution with
+$\beta = 2$. We estimate the expected value using Acceptance-Rejection
+method.
 
 ### **Tasks**
-1. Use Acceptance-Rejection method to sample 1000 samples, then estimate \( E[X] \). Try to use two different approximation distributions for the Acceptance-Rejection method, which one is more efficient?
 
+1.  Use Acceptance-Rejection method to sample 1000 samples, then
+    estimate $E[X]$. Try to use two different approximation
+    distributions for the Acceptance-Rejection method, which one is more
+    efficient?
 
-```{r semicircle-monte-carlo}
+``` r
 #install.packages("truncnorm")
 library(truncnorm)
 set.seed(20250217)
@@ -217,39 +273,45 @@ aRate_byUnif <- length(randSC_unif) / n
 aRate_byNormal <- length(randSC_normal) / n
 
 paste("We choose to use truncated normal and uniform distribution to approximate the semicircle distribution: `E[X_byNormal] ` =", ex_byNormal, ", E[X_byNormal]  =", ex_byUnif)
-  
+```
+
+    ## [1] "We choose to use truncated normal and uniform distribution to approximate the semicircle distribution: `E[X_byNormal] ` = 0.0170430998130037 , E[X_byNormal]  = -0.0294812535341918"
+
+``` r
 paste("The acceptance rate of truncated uniform distribution approximation is", aRate_byUnif, "; the acceptance rate of truncated normal distribution approximation is", aRate_byNormal, ". So we know that approximation by", ifelse(aRate_byUnif < aRate_byNormal, "Normal", "Uniform"), "Distribution is more efficient.")
 ```
 
+    ## [1] "The acceptance rate of truncated uniform distribution approximation is 0.798 ; the acceptance rate of truncated normal distribution approximation is 0.607 . So we know that approximation by Uniform Distribution is more efficient."
 
 # Problem 5
 
-Suppose the random variable $X$ follows standard Cauchy distribution (pdf: $f(x) = \frac{1}{\pi(1+x^2)}$). We want to calculate the expectation of the truncated random variable $Y = X\cdot \mathrm{I}(0\leq X\leq 2)$. 
+Suppose the random variable $X$ follows standard Cauchy distribution
+(pdf: $f(x) = \frac{1}{\pi(1+x^2)}$). We want to calculate the
+expectation of the truncated random variable
+$Y = X\cdot \mathrm{I}(0\leq X\leq 2)$.
 
 **1.** Calculate the $\mathrm{E}[Y]$ manually.
 
-**2.** Estimate $\mathrm{E}[Y]$ using importance sampling method with the following importance distributions and evaluate the corresponding variances. 
+**2.** Estimate $\mathrm{E}[Y]$ using importance sampling method with
+the following importance distributions and evaluate the corresponding
+variances.
 
-(a) Uniform distribution on [0, 2]
+1)  Uniform distribution on \[0, 2\]
 
-(b) Standard normal distribution
+2)  Standard normal distribution
 
+**3.** Suppose $U \sim \mathrm{Unif}[0, 2]$. Estimate $\mathrm{E}[Y]$
+and its variance using control variate method with the
 
-**3.** Suppose $U \sim \mathrm{Unif}[0, 2]$. Estimate $\mathrm{E}[Y]$ and its variance using control variate method with the 
+1)  $U$
 
-(a) $U$
+2)  $2U - U^2$
 
-(b) $2U - U^2$
+# Answer:
 
+1.  $E[Y] = E[X \mathbb{I}(0 \leq X \leq 2) = \int^{2}_{0} x f(x) dx = \frac{1}{\pi}\int^{2}_{0} \frac{x}{1+x^2}dx  = \frac{1}{2\pi} ln(1+x^2)|^{2}_{0} = \frac{ln5}{2\pi}$
 
-
-# Answer: 
-
-1. $E[Y] = E[X \mathbb{I}(0 \leq X \leq 2) = \int^{2}_{0} x f(x) dx = \frac{1}{\pi}\int^{2}_{0} \frac{x}{1+x^2}dx  = \frac{1}{2\pi} ln(1+x^2)|^{2}_{0} = \frac{ln5}{2\pi}$
-
-
-
-```{r P5_2}
+``` r
 # 2. (a)
 is_cauchy_unif <- function(n,x) {
   # Generate n samples from Unif(0,2)
@@ -286,7 +348,9 @@ res_norm <- is_cauchy_normal(n,x5)
 paste("2.(a)&(b): By Uniform(0,2), the estimated E[Y] = ", res_unif$mu_hat, "estimated variance =", res_unif$var_hat, ". By Standard Normal, the estimated E[Y] = ", res_norm$mu_hat, "estimated variance =", res_norm$var_hat)
 ```
 
-```{r P5_3}
+    ## [1] "2.(a)&(b): By Uniform(0,2), the estimated E[Y] =  0.256730934823203 estimated variance = 6.15118933314065e-06 . By Standard Normal, the estimated E[Y] =  0.789374859783884 estimated variance = 0.000325500009029138"
+
+``` r
 T_U <- function(u) {
   (2*u)/(pi*(1+u^2))
 }
@@ -309,10 +373,23 @@ mu_hat_cv1 <- mean(T_cv1)
 var_hat_cv1 <- var(T_cv1)/n
 
 cat("3(a) CV with Z1(U)=U:\n")
+```
+
+    ## 3(a) CV with Z1(U)=U:
+
+``` r
 cat("   Estimate of E[Y] =", mu_hat_cv1, "\n")
+```
+
+    ##    Estimate of E[Y] = 0.2567309
+
+``` r
 cat("   Variance =", var_hat_cv1, "\n\n")
+```
 
+    ##    Variance = 3.828847e-06
 
+``` r
 # (b) Control Variate Z2(U) = 2U - U^2
 Z2 <- 2*x5 - x5^2
 Z2_mean <- mean(Z2) 
@@ -327,32 +404,50 @@ mu_hat_cv2 <- mean(T_cv2)
 var_hat_cv2 <- var(T_cv2)/n
 
 cat("3(b) CV with Z2(U)=2U - U^2:\n")
+```
+
+    ## 3(b) CV with Z2(U)=2U - U^2:
+
+``` r
 cat("   Estimate of E[Y] =", mu_hat_cv2, "\n")
+```
+
+    ##    Estimate of E[Y] = 0.2567309
+
+``` r
 cat("   Variance =", var_hat_cv2, "\n\n")
 ```
 
-
-
-
+    ##    Variance = 2.684736e-06
 
 # Problem 6
 
-Imagine you are an examiner and need to calculate lifetime ($L$) of the machine  . By examining the data, you find that the temperature ($T$) follows a normal distribution with mean 15 and standard deviation 5. You also notice that, although the lifetime of the machine are very different across temperature groups.
+Imagine you are an examiner and need to calculate lifetime ($L$) of the
+machine . By examining the data, you find that the temperature ($T$)
+follows a normal distribution with mean 15 and standard deviation 5. You
+also notice that, although the lifetime of the machine are very
+different across temperature groups.
 
-For cold days (temperature <= 10), the lifetime of the machine approximately follows a Weibull distribution with shape $k = 1.5$ and scale $\lambda = 15$; For mild days (10 < temperature <= 25), the lifetime of the machine approximately follows a Weibull distribution with shape $k = 1$ and scale $\lambda = 20$, and finally hot hot days (temperature > 25), the lifetime of the machine follows a Weibull distribution with shape $k = 2$ and scale $\lambda = 10$
+For cold days (temperature \<= 10), the lifetime of the machine
+approximately follows a Weibull distribution with shape $k = 1.5$ and
+scale $\lambda = 15$; For mild days (10 \< temperature \<= 25), the
+lifetime of the machine approximately follows a Weibull distribution
+with shape $k = 1$ and scale $\lambda = 20$, and finally hot hot days
+(temperature \> 25), the lifetime of the machine follows a Weibull
+distribution with shape $k = 2$ and scale $\lambda = 10$
 
+With these information, please use following two ways to calculate the
+expected lifetime for the entire machines.
 
-With these information, please use following two ways to calculate the expected lifetime for the entire machines. 
+**1.** Consider the law of total expectation:
+$\mathrm{E}[L] = \mathrm{E}[\mathrm{E}[L|T]] = \sum_{i=1}^3 \mathrm{E}[L|T \in T_i] P(T\in T_i)$.
 
-**1.** Consider the law of total expectation: $\mathrm{E}[L] = \mathrm{E}[\mathrm{E}[L|T]] = \sum_{i=1}^3 \mathrm{E}[L|T \in T_i] P(T\in T_i)$.
+**2.** Consider the Hierarchical Sampling for MC-Integration method:
+$\mathrm{E}[L] =  \int \int l \cdot f_{L, T}(l, t) \, dt \,dl = \int \int l f_{L|T}(l|t) f_{T}(t) \,dt \,dL$.
 
-**2.** Consider the Hierarchical Sampling for MC-Integration method: $\mathrm{E}[L] =  \int \int l \cdot f_{L, T}(l, t) \, dt \,dl = \int \int l f_{L|T}(l|t) f_{T}(t) \,dt \,dL$.
+# Answer:
 
-
-
-# Answer: 
-
-```{r }
+``` r
 # 1
 p_cold <- pnorm((10 - 15) / 5)
 p_mild <- pnorm((25 - 15) / 5) - pnorm((10 - 15) / 5)
@@ -369,7 +464,11 @@ E_hot <- 10 * gamma(1 + 1/2)
 E_L_total_exp <- p_cold * E_cold + p_mild * E_mild + p_hot * E_hot
 
 paste("1. With total expectation: E[L] =", E_L_total_exp)
+```
 
+    ## [1] "1. With total expectation: E[L] = 18.7218893326364"
+
+``` r
 set.seed(20250217)
 N <- 1e5
 
@@ -394,5 +493,4 @@ E_L_hierarchical <- mean(Lsim)
 cat("With hierarchical simulation, Estimated E[L] (MC) =", E_L_hierarchical)
 ```
 
-
-
+    ## With hierarchical simulation, Estimated E[L] (MC) = 18.74221
