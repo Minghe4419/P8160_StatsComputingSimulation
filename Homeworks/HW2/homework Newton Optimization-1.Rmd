@@ -1,0 +1,80 @@
+---
+title: "Homework on Newton's methods"
+author: "Leave your name and uni here"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Problem 1: Univariate optimizations.
+
+In this problem, you will compare three common methods for univariate minimization:Newton’s Method, Bisection Method and Golden-Section Search. 
+
+## Function A:
+$$f_1(x) = \ln(1+x^2)+x^2$$
+## Function B:
+$$f_2(x) = x^4 -6x^2+4x+8$$
+## Answer the following questions:
+
+\begin{enumerate}
+\item Computer $f'(x)$ and $f''(x)$
+ \item Are $f_1(x)$ and $f_2(x)$ unimodal functions? If not, how many modes it contains?
+ 
+ \item Implementing Bisection, Golden Search and Newtown's methods to find global minimum of $f_1(x)$
+and $f_2(x)$
+
+\item Discuss your results  -- which method is fastest in terms of iteration counts? which method is easist to apply if you only know a broad interval containing the mininum? which method fails or converges poorly if started badly?  how the shape of the function influences the performance of these algorithms?
+
+\item Please show all relevant R code for bisection, golden-section, and Newton’s methods.
+\end{enumerate}
+
+
+# Answer: your answer starts here...
+
+```{r }
+#R codes:
+```
+
+
+# Problem 2: Newton’s Method in Two Dimensions
+
+$g(x,y)$ is a 2D funciton
+$$g(x,y) = x^2+xy+y^2-4x-3y+7$$
+## Answer the folling questions:
+
+\begin{enumerate}
+\item Derive the gradient $\Delta g(x,y)$ and the Hessian matrix $\Delta^2 g(x,y)$.
+\item Implementation a Newton’s algorithm to find its minimizer.
+\item Choose two different starting values, and compare the resulting solutions, iteration counts and path to convergence
+\item Create a coutour plot of $g$ around its minium, and overlay the sequence of iterates from Newton’s method to show the path to the minimum.
+\end{enumerate}
+
+
+# Answer: your answer starts here...
+
+```{r }
+#R codes:
+```
+
+
+# Problem 3
+Suppose we have data $(x_i,y_i), i=1,...,n,$ with $y_i$ follows a conditional expotential distribution 
+
+
+
+$$Y_i \mid x_i \sim \exp(\lambda_i), \mbox{ where } \log(\lambda_i) =\alpha + \beta x_i.$$
+
+## Please complete the following tasks:
+
+\begin{enumerate}
+\item Derive the log-likelihood of $(x_i,y_i)$, as well as its Gradient and Hession Matrix
+\item Generate a syntheic data with true $\alpha = 0.5$, true $\beta=1.2$ and sample size $n = 200$.
+\item Implement an Newton's algorthm to its MLE 
+\item Implement a modified Newton's algorithm, where you incoporate both of the step-having and ascent direction check. If a direction is not ascent, you can swith to a simpler gradient descent. 
+\item For a generalized linear models, one can replace the observed Hessian with the expected Hessian (the Fisher information), which might lead to stable updates akin to a Fisher scoring approach. Implement another modified newton's algorithm with Fisher scoring toestimate MLE.
+\item Compare the final parameter estimates, iteration counts and convergences of optimization, and summarize your findings.
+\end{enumerate}
+
+ 
