@@ -2,7 +2,7 @@
 title: "Homework 1"
 author: "Minghe Wang"
 date: "`r Sys.Date()`"
-output: github_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
