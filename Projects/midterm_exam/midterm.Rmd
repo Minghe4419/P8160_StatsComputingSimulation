@@ -1,0 +1,327 @@
+---
+title: "Midterm Exam for P8116, Advanced Computing"
+author: 'Minghe Wang, mw3845:'
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+
+
+**Honor Code**
+
+I, the undersigned, affirm that I will complete this exam solely using my own knowledge and the materials provided within the coursework. I agree not to use any external resources such as Google, websites other than those provided in the coursework, or any artificial intelligence tools. I understand that any violation of this policy constitutes a breach of academic integrity and may result in disciplinary action, including a failing grade for this exam.
+
+By beginning this exam, I acknowledge and agree to abide by the above honor code.
+
+**Signature: Minghe Wang** 
+
+**Date: 2025-03-10** 
+
+
+---
+
+**Problem 1: Random Number Generation [25 points]**
+
+1. Inverse CDF (Quantile) Method: consider the probability density function defined as:
+  $$f(x)= 2x, x\in[0,1]$$
+  
+   (a) Derive the cumulative distribution function (CDF) for $f(x)$ and then obtain the inverse CDF.
+    
+   (b) Use the inverse CDF method to generate a sample of $N=500$ values from this distribution.
+  
+   (c) Plot a histogram of the generated samples and overlay the theoretical density to confirm your results.
+  
+   (d) Discuss the conditions a distribution must satisfy for the inverse CDF method to be applicable.
+     
+2. Acceptance–Rejection Method
+
+   (a) Outline the steps of the acceptance–rejection algorithm.
+
+   (b) Use acceptance–rejection to generate samples from a truncated Normal distribution, $N(0,1)$ conditioned on $x>0$. Use a simpler proposal distribution (e.g., exponential) that covers $x>0$.
+
+   (c) Discuss the efficiency (the acceptance rate) of your approach. 
+
+
+```{r }
+# 1.
+# a CDF F(x) = x^2
+# b
+generate_x <- function(n){
+  u <- runif(n)
+  x <- sqrt(u)
+  return(x)
+}
+n <- 500
+set.seed(123)
+
+randX <- generate_x(n)
+# c
+hist(randX, probability = TRUE, main = paste('sample size =', n), xlab = 'x')
+curve(2*x, from=0, to=max(randX), add = TRUE, col = 'red')
+
+
+# 2.
+# a
+X_rej = NULL
+accepted <- 0
+M=1
+n2=10000
+lambda=1
+set.seed(123)
+
+for (i in 1:n2) {
+  Y <- rexp(1, lambda)
+  f_y <- ifelse(Y > 0, (2 / sqrt(2*pi)) * exp(-Y^2 / 2), 0)
+  g_y <- dexp(Y, rate = lambda)
+  
+  if (runif(1) < f_y / (M * g_y)) {
+    X_rej <- c(X_rej, Y)
+    accepted <- accepted + 1
+  }
+}
+acceptance_rate <- accepted / n2
+
+cat("Acceptance rate:", acceptance_rate, "\n")
+```
+
+**Ans:**
+
+- 1.a F(x) = $x^2, x \in [0, 1]$
+
+- 1.d The distribution need to have a closed form inverse PDF
+
+- 2.c The acceptance rate is `r acceptance_rate`. We simulate `r n2` times to obtain a valid result, and it shows that the acceptance probability is relative high.
+
+**Problem 2: Monte Carlo Integration [25 points]**
+
+(a) Implement a Monte Carlo approximation for
+
+$$\int_{-1}^1 \ln(1+x^2) dx $$
+
+(b) Report the mean of your estimates and approximate 95% confidence intervals using the sample standard deviation.
+
+(c) Compare your Monte Carlo estimate to a numerical integration routine and discuss the difference.
+
+(d) Propose a control variate function for the integral, and explain why you think it might be effective.
+
+(e) Implement the Monte Carlo estimator with and without the control variate. Compare the variances of both methods and comment on any observed improvements.
+
+
+
+```{r test}
+# a
+set.seed(123)
+n2 <- 10000
+a <- -1
+b <- 1
+
+x_samples <- runif(n2, min = a, max = b)
+f_values <- log(1 + x_samples^2)
+I_est <- (b - a) * mean(f_values)
+
+s <- sd(f_values)
+SE <- (b - a) * s / sqrt(n)
+
+CI_lower <- I_est - 1.96 * SE
+CI_upper <- I_est + 1.96 * SE
+
+# c
+numerical_result <- integrate(function(x) log(1+x^2), lower = -1, upper = 1)
+
+# e
+u <- runif(n2, min = a, max = b)
+# Evaluate f(x) and m(x)
+f <- function(x){
+  log(1 + x^2)
+}
+m <- function(x){
+  return(x^2)
+}
+f_vals <- f(u)
+m_vals <- m(u)
+interval_length <- (b - a)
+I_hat <- interval_length * f_vals
+  
+# Estimate the optimal beta
+beta_opt <- lm(f_vals ~ m_vals)$coef[2]
+# Control variate estimator:
+I_hat_cv <- interval_length * (f_vals - beta_opt * (m_vals - 1/3) )
+
+mean_standard2 <- mean(I_hat)
+var_standard2 <- var(I_hat)
+
+mean_cv2 <- mean(I_hat_cv)
+var_cv2 <- var(I_hat_cv)
+
+cat("Standard Monte Carlo estimate: Mean =", mean_standard2, ", Variance =", var_standard2, "\n")
+cat("Control Variate estimate:      Mean =", mean_cv2, ", Variance =", var_cv2, "\n")
+
+```
+
+**Ans:** 
+
+- b. The mean of estimates is `r I_est`, the 95% CI is (`r CI_lower`, `r CI_upper`).
+
+- c. A numerical integration routine tends to have a more accurate result for 1 dimensional integral. The numerical intergration result is `r numerical_result$value`
+
+- e. The result is shown above, the estimation with control variate has an obvious lower variance(improved efficiency) contributed by the optimal $\beta$.
+
+**Problem 3: Newton’s Method [25 points]**
+
+Consider a two parameter function
+$$f(a,b)=-a^2-b^2 +4a + 6b$$
+
+(a)  Derive the gradient vector $\nabla f(a,b)$ and  the Hessian matrix $\nabla^2 f(a,b)$
+
+(b) Find analytical solution that maximize $f(a,b)$, i.e.,
+$$(a^*, b^*) = \arg \max f(a,b)$$
+(c) Implement Newton’s method for maximization of $f(a,b)$
+
+(d) Plot the value of 
+$f(a,b)$ versus the iteration number to illustrate the convergence behavior, and briefly discuss the convergence properties observed in your implementation.
+
+
+```{r echo=TRUE}
+f <- function(a, b) {
+  -a^2 - b^2 + 4*a + 6*b
+}
+grad <- function(a, b){
+  c(-2*a + 4, -2*b + 6)
+}
+hess <- matrix(c(-2, 0,
+              0, -2), nrow = 2, byrow = TRUE)
+
+newtonRalphson <- function(a0, b0, grad, hess, tol=1e-10, max_iter=10){
+  i <- 0
+  a <- a0
+  b <- b0
+  hess_inv <- solve(hess)
+  g_val <- grad(a, b)
+  f_vals <- c(f(a,b))
+  res <- c(a, b, g_val, f_vals, i)
+  prev_a <- -Inf
+  prev_b <- -Inf
+  while(i < max_iter){# && (a-prev_a > tol) && (b-prev_b > tol)){#sqrt(sum(g_val^2)) > tol){
+    i <- i + 1
+    curr <- hess_inv %*% g_val
+    prev_a <- a
+    prev_b <- b
+    a <- a - curr[1]
+    b <- b - curr[2]
+    g_val <- grad(a, b)
+    f_vals <- f(a, b)
+    res <- rbind(res, c(a, b, g_val, f_vals, i))
+  }
+  return(res)
+}
+set.seed(123)
+result <- newtonRalphson(a0 = 0, b0 = 0, grad, hess)
+print(result)
+
+plot(result[,5], type = "o", pch = 16, col = "blue",
+     xlab = "Iteration", ylab = "f(a, b)",
+     main = "Convergence of f(a,b) under Newton's Method")
+grid()
+
+```
+
+**Ans:** 
+
+- a. $\nabla f(a,b) = (^{-2a+4}_{-2b+6})$ , $\nabla^2 f(a,b) = \left(\begin{array}{cc} -2 & 0\\ 0 & -2\end{array}\right)$
+
+- b. f(2, 3) = 13
+
+- d. The plot above shows a very rapid (quadratic) convergence toward the optimum(at first updating).
+
+**Problem 4: EM Algorithm [25 points]**
+
+Suppose you have Bernoulli mixture data, $x_1, x_2,...,x_n$, that come from a mixture of two Bernoulli distributions with unknown parameters:
+$$ X\sim \pi B(1,p_1) + (1-\pi) B(1, p_2),$$ 
+where $B(1, p)$ represents Bernoulli distribution with success probability $p$.
+
+(a) write down Write down the likelihood (and log-likelihood) for the dataset $\{x_i\} under the above mixture model.
+
+(b) write out E-step and M-step with formulas for updating $\pi, p_1, p_2$.
+
+(c) Implement your EM algorithm with a synthetic data of sample size $n=100$, with true parameter $\pi=0.4, p_1=0.7, p_2=0.2$.
+Provide the final estimates and plot or tabulate the change in the log-likelihood over iterations.
+
+(d) What difficulties can arise if $p_1$ or $p_2$ are initially very close to 0 or 1? Do you observe  convergence or numerical issues? What would you suggest to robustiy EM algorithm?
+
+
+```{r}
+delta_bernoulli <- function(X, pars){
+  num <- pars$p * (pars$p2^X) * ((1 - pars$p2)^(1 - X))
+  denom <- (1 - pars$p) * (pars$p1^X) * ((1 - pars$p1)^(1 - X)) + num
+  return(num / denom)
+}
+
+mles_bernoulli <- function(Z, X) {
+  n <- length(X)
+  phat <- sum(Z)/n
+  p1hat <- sum((1 - Z) * X) / sum(1 - Z)
+  p2hat <- sum(Z * X) / sum(Z)
+  return(list(p = phat, p1 = p1hat, p2 = p2hat))
+}
+
+EM_bernoulli <- function(X, start, nreps = 10) {
+  i <- 0
+  Z <- delta_bernoulli(X, start)
+  newpars <- start
+  res <- rbind(c(0, newpars$p, newpars$p1, newpars$p2))
+  
+  while (i < nreps) {
+    i <- i + 1
+    # M-step: update parameters given the responsibilities
+    newpars <- mles_bernoulli(Z, X)
+    # E-step: update responsibilities using the new parameters
+    Z <- delta_bernoulli(X, newpars)
+    res <- rbind(res, c(i, newpars$p, newpars$p1, newpars$p2))
+  }
+  
+  colnames(res) <- c("iter", "p", "p1", "p2")
+  return(res)
+}
+
+
+n <- 100
+pi_true <- 0.4
+p1_true <- 0.7
+p2_true <- 0.2
+set.seed(123)
+# Generate latent indicators
+z_true <- rbinom(n, size = 1, prob = pi_true)
+
+# Get data
+x <- ifelse(z_true == 1, rbinom(n, size = 1, prob = p2_true),
+            rbinom(n, size = 1, prob = p1_true))
+
+# the initial guesses
+start <- list(p = 0.2, p1 = 0.3, p2 = 0.1)
+
+em_results <- EM_bernoulli(x, start, nreps = 10)
+print(em_results)
+
+plot(em_results[,"iter"], em_results[,"p"], type="o", col="blue", 
+     xlab="Iteration", ylab="Estimated pi", main="Convergence of pi")
+abline(h = pi_true, col="red", lty=2)
+```
+
+**Ans:**
+
+- a. 
+
+likelihood: $L(x) = \prod_{i=1}^{n}(1-\pi)p_2^{x_i}(1-p_2)^{x_i} + \pi p_1^{x_i}(1-p_1)^{x_i}$
+
+log-likelihood: $l(x) = \sum_{i=1}^{n} ln((1-\pi)p_2^{x_i}(1-p_2)^{x_i} + \pi p_1^{x_i}(1-p_1)^{x_i})$
+
+- b. E-step: $Z_i = \frac{\pi p_1^{x_i}(1-p_1)^{x_i}}{(1-\pi)p_2^{x_i}(1-p_2)^{x_i} + \pi p_1^{x_i}(1-p_1)^{x_i}}$
+
+M-step: $\pi = \frac{1}{n}\sum^{n}_{i=1} Z_i$, $p_1 = \frac{\sum^{n}_{i=1}Z_i x_i}{\sum^{n}_{i=1}Z_i}$, $p_2 = \frac{\sum^{n}_{i=1}(1-Z_i) x_i}{\sum^{n}_{i=1}(1-Z_i)}$
+
+- c. According to the plot, the estimation is indeed converging. However, estimated parameters are not as accurate 
+
+- d. Extreme initial values for p1 or p2(close to 0 or 1) may cause numerical instability and degenerate responsibilities. To robustify the EM algorithm, we can use multiple initializations, add regularization(pseudo–counts), or work with a transformed parameter(log–odds).
