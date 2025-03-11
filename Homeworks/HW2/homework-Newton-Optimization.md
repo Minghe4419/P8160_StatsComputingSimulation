@@ -1,6 +1,6 @@
 Homework on Newton’s methods
 ================
-Leave your name and uni here
+Minghe Wang, mw3845
 
 # Problem 1: Univariate optimizations.
 
