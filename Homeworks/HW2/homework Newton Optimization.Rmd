@@ -6,6 +6,7 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(seed = 123)
 library(tidyverse)
 ```
 
@@ -103,7 +104,7 @@ newtonMethod <- function(f, df, start, tol=1e-10){
   res <- c(x, i)
   return(res)
 }
-
+set.seed(123)
 # f1
 a <- -2
 b <- 1
@@ -124,51 +125,61 @@ res_f2_nt1 <- newtonMethod(f2_first, f2_second, as[1])
 res_f2_nt2 <- newtonMethod(f2_first, f2_second, as[2])
 
 # 4.
-comparison1 <- as.data.frame(rbind(c("bisection", res_f1_bisec), 
-                                  c("golden search", res_f1_gs),
-                                  c("newton method", res_f1_nt)))
+comparison1 <- as.data.frame(rbind(c("bisection", res_f1_bisec, f1(res_f1_bisec[1])), 
+                                  c("golden search", res_f1_gs, f1(res_f1_gs[1])),
+                                  c("newton method", res_f1_nt, f1(res_f1_nt[1]))))
 comparison1 <- comparison1 %>% 
-  rename(name = "V1", result = "V2", iteration = "V3")
+  rename(name = "V1", root = "V2", iteration = "V3", result = "V4")
 comparison1
 
-comparison2 <- as.data.frame(rbind(c("bisection root 1", res_f2_bisec1),
-                                   c("bisection root 2", res_f2_bisec2),
-                                   c("golden search root 1", res_f2_gs1),
-                                   c("golden search root 2", res_f2_gs2),
-                                   c("newton method root 1", res_f2_nt1),
-                                   c("newton method root 2", res_f2_nt2)))
+comparison2 <- as.data.frame(rbind(c("bisection root 1", res_f2_bisec1, f2(res_f2_bisec1[1])),
+                                   c("bisection root 2", res_f2_bisec2, f2(res_f2_bisec2[1])),
+                                   c("golden search root 1", res_f2_gs1, f2(res_f2_gs1[1])),
+                                   c("golden search root 2", res_f2_gs2, f2(res_f2_gs2[1])),
+                                   c("newton method root 1", res_f2_nt1, f2(res_f2_nt1[1])),
+                                   c("newton method root 2", res_f2_nt2, f2(res_f2_nt2[1]))))
 comparison2 <- comparison2 %>% 
-  rename(name = "V1", result = "V2", iteration = "V3")
+  rename(name = "V1", root = "V2", iteration = "V3", result = "V4")
 comparison2
 ```
 
-1. **function A: **  $f'_1(x) = \frac{2x}{1+x^2} + 2x$, $f''_1(x) = \frac{2(x^4 +x^2 +2)}{(1+x^2)^2}$
+1. 
+
+**function A: **  $f'_1(x) = \frac{2x}{1+x^2} + 2x$, $f''_1(x) = \frac{2(x^4 +x^2 +2)}{(1+x^2)^2}$
 
   **function B: ** $f'_2(x) = 4x^3 - 12x + 4$, $f''_2(x) = 12x^2 - 12$
 
-2. To find whether functions are unimodal, we need to find root where first prime of function is 0 and second prime of function is positive.
+2. 
+
+To find whether functions are unimodal, we need to find root where first prime of function is 0 and second prime of function is positive.
 
 For **function A**, it is obvious that the first derivative of function is 0 only when x = 0, and $f''_2(0) = 4 > 0$. Therefore, function A is unimodal.
 
 For **function B**, we use `library(rootSolve)` and find `r length(critical_points_f2)` root for function B. `r ifelse(length(critical_points_f2)==1, "is", "is not")` unimodal.
 
-3. The comparison of results for function A and B are presented above in tables.
+3. 
 
-By question 2, we know that root of function B are: `r critical_points_f2`, and their second derivatives are `r f2_second(critical_points_f2)`. Therefore, we only have 2 local minimum.
+The comparison of results for function A and B are presented above in tables.
 
-The newton's method is fastest in terms of iteration. 
+With result from question 2, we know that root of function B are: `r critical_points_f2`, and their second derivatives are `r f2_second(critical_points_f2)`. Therefore, we only have 2 local minimum.
 
-I think the Golden Search is the easiest method to apply if we only know a broad range because we don't need to know the expression of derivatives of function. Also, bisection and newton methods are root finding methods, but for golden search, we can implement it to obtain either maximum or minimum.
+4. 
 
-Newton's Method is most prone to failure or poor convergence when initial guess is bad. if initial guess is too far or its second derivative is too close to 0, then the method might diverge to another search region or crash(denominator=0).
+According to the comparison tables, we first verify that the root of f1 is at 0 and the global minimum can also be considered as $f(0)=0$ . For f2, we wisely choose the range and starting point in order to handle its multi-modal. And by comparison, we find the global minimum of f2 is `r f2(res_f2_bisec1[1])` at root = `r res_f2_bisec1[1]`. All methods agrees with the global minimum for both functions, which indicate our estimation of global minimum is valid.
 
-Shape of function influences:
+  The newton's method is fastest in terms of iteration. 
 
-- Bisection because it requires the signs of first derivative of the range we choose to be different. Therefore, if we don't properly choose the interval, other critical points might be included.
+  I think the Golden Search is the easiest method to apply if we only know a broad range because we don't need to know the expression of derivatives of function. Also, bisection and newton methods are root finding methods, but for golden search, we can implement it to obtain either maximum or minimum.
 
-- Golden Search because it assumes unimodality of our function. If there is multiple modals, we need to isolate each of them.
+  Newton's Method is most prone to failure or poor convergence when initial guess is bad. if initial guess is too far or its second derivative is too close to 0, then the method might diverge to another search region or crash(denominator=0).
 
-- Newton Method because the second derivative of the function(local curvature) can influence convergence significantly.
+  Shape of function influences:
+
+  - Bisection because it requires the signs of first derivative of the range we choose to be different. Therefore, if we don't properly choose the interval, other critical points might be included.
+
+  - Golden Search because it assumes unimodality of our function. If there is multiple modals, we need to isolate each of them.
+
+  - Newton Method because the second derivative of the function(local curvature) can influence convergence significantly.
 
 # Problem 2: Newton’s Method in Two Dimensions
 
@@ -189,6 +200,7 @@ $$g(x,y) = x^2+xy+y^2-4x-3y+7$$
 1. $\Delta g(x,y) = (^{2x + y-4}_{x+2y-3})$ , $\Delta^2 g(x,y) = \left(\begin{array}{cc} 2 & 1\\ 1 & 2\end{array}\right)$
 ```{r }
 # 2. 
+set.seed(123)
 grad <- function(x, y) {
   c(2*x + y - 4,  x + 2*y - 3)
 }
@@ -221,6 +233,37 @@ res_table2 <- newtonRalphson(10, -5, grad, hess)
 
 res_table1
 res_table2
+
+
+g <- function(x, y) {
+  x^2 + x*y + y^2 - 4*x - 3*y + 7
+}
+
+all_x <- c(res_table1[,1], res_table2[,1])
+all_y <- c(res_table1[,2], res_table2[,2])
+x_range <- range(all_x)
+y_range <- range(all_y)
+x_vals <- seq(x_range[1] - 1, x_range[2] + 1, length.out = 100)
+y_vals <- seq(y_range[1] - 1, y_range[2] + 1, length.out = 100)
+
+# Compute the function values on the grid.
+z_vals <- outer(x_vals, y_vals, g)
+
+# Plot the contour
+contour(x_vals, y_vals, z_vals, nlevels = 20, 
+        xlab = "x", ylab = "y", 
+        main = "Contour Plot of g(x,y) with Newton Iterates")
+
+lines(res_table1[,1], res_table1[,2], type = "b", col = "red", pch = 19, lwd = 2)
+points(res_table1[,1], res_table1[,2], col = "red", pch = 19)
+
+lines(res_table2[,1], res_table2[,2], type = "b", col = "blue", pch = 19, lwd = 2)
+points(res_table2[,1], res_table2[,2], col = "blue", pch = 19)
+
+# Add a legend
+legend("topright", legend = c("Start (0.8, 0.7)", "Start (10, -5)"), 
+       col = c("red", "blue"), pch = 19, lwd = 2)
+
 ```
 
 
@@ -246,7 +289,7 @@ $$Y_i \mid x_i \sim \exp(\lambda_i), \mbox{ where } \log(\lambda_i) =\alpha + \b
 
 # Answer:
 
-1. Since the conditional distribution is exponential, we use its pdf and then we have $L(\alpha, \beta) = ln \prod^{n}_{i=1}[\lambda_i]e^{-\lambda_iy_i} = \sum^{n}_{i=1}[ln(\lambda_i) - \lambda_i y_i] = \sum^{n}_{i=1}[\alpha + \beta x_i-y_i e^{\alpha + \beta x_i}]$
+1. Since the conditional distribution is exponential, we use its pdf and then we have $l(\alpha, \beta) = ln \prod^{n}_{i=1}[\lambda_i]e^{-\lambda_iy_i} = \sum^{n}_{i=1}[ln(\lambda_i) - \lambda_i y_i] = \sum^{n}_{i=1}[\alpha + \beta x_i-y_i e^{\alpha + \beta x_i}]$
 
 Gradient: $\nabla L(\alpha,\beta)=\begin{pmatrix}n - \sum_{i=1}^n y_i\, e^{\alpha+\beta x_i} \\[6pt]\sum_{i=1}^n x_i \;-\; \sum_{i=1}^n \bigl(x_i\, y_i\, e^{\alpha+\beta x_i}\bigr)\end{pmatrix}.$
 
@@ -258,10 +301,9 @@ Hessian: $\nabla^2 L(\alpha,\beta)=\begin{pmatrix}-\sum_{i=1}^n y_i\, e^{\alpha+
 n <- 200
 alpha_true <- 0.5
 beta_true  <- 1.2
-
 set.seed(123)
+x <- runif(n, 0, 1)
 # Generate predictor values (x_i)
-x <- rnorm(n)
 lambda <- exp(alpha_true + beta_true * x)
 
 # Generate y_i ~ Exp(rate = lambda_i)
@@ -459,3 +501,4 @@ results <- data.frame(Method = c("Original Newton", "Modified Newton", "Fisher S
 print(results)
 ```
 
+6. Based on the comparison table above, we found that all methods can find the MLE quickly and the modified newton ralphson with ascent check and step halving is the fastest as we expected. All three methods agrees on an optimum, which indicates our result is valid.
