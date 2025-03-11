@@ -1,44 +1,26 @@
----
-title: "Homework on Newton's methods"
-author: "Minghe Wang, mw3845"
-output: pdf_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_chunk$set(seed = 123)
-library(tidyverse)
-```
+Homework on Newton’s methods
+================
+Leave your name and uni here
 
 # Problem 1: Univariate optimizations.
 
-In this problem, you will compare three common methods for univariate minimization:Newton’s Method, Bisection Method and Golden-Section Search. 
+In this problem, you will compare three common methods for univariate
+minimization:Newton’s Method, Bisection Method and Golden-Section
+Search.
 
 ## Function A:
+
 $$f_1(x) = \ln(1+x^2)+x^2$$
 
 ## Function B:
+
 $$f_2(x) = x^4 -6x^2+4x+8$$
 
 ## Answer the following questions:
 
-\begin{enumerate}
-\item Computer $f'(x)$ and $f''(x)$
- \item Are $f_1(x)$ and $f_2(x)$ unimodal functions? If not, how many modes it contains?
- 
- \item Implementing Bisection, Golden Search and Newtown's methods to find global minimum of $f_1(x)$
-and $f_2(x)$
+# Answer:
 
-\item Discuss your results  -- which method is fastest in terms of iteration counts? which method is easist to apply if you only know a broad interval containing the mininum? which method fails or converges poorly if started badly?  how the shape of the function influences the performance of these algorithms?
-
-\item Please show all relevant R code for bisection, golden-section, and Newton’s methods.
-\end{enumerate}
-
-
-# Answer: 
-
-
-```{r }
+``` r
 # 2.
 # install.packages("rootSolve")
 library(rootSolve)
@@ -131,7 +113,14 @@ comparison1 <- as.data.frame(rbind(c("bisection", res_f1_bisec, f1(res_f1_bisec[
 comparison1 <- comparison1 %>% 
   rename(name = "V1", root = "V2", iteration = "V3", result = "V4")
 comparison1
+```
 
+    ##            name                  root iteration               result
+    ## 1     bisection  1.45519152283669e-11        35 2.11758236813575e-22
+    ## 2 golden search -5.79591141089835e-12        51 3.35925890829817e-23
+    ## 3 newton method  4.58039842491341e-16         5 2.09800497309492e-31
+
+``` r
 comparison2 <- as.data.frame(rbind(c("bisection root 1", res_f2_bisec1, f2(res_f2_bisec1[1])),
                                    c("bisection root 2", res_f2_bisec2, f2(res_f2_bisec2[1])),
                                    c("golden search root 1", res_f2_gs1, f2(res_f2_gs1[1])),
@@ -143,62 +132,89 @@ comparison2 <- comparison2 %>%
 comparison2
 ```
 
-1. 
+    ##                   name              root iteration            result
+    ## 1     bisection root 1 -1.87938524156925        35 -8.23442238342932
+    ## 2     bisection root 2  1.53208888624067        35  5.55437759271229
+    ## 3 golden search root 1 -1.87938523016814        50 -8.23442238342932
+    ## 4 golden search root 2  1.53208889529803        49  5.55437759271229
+    ## 5 newton method root 1 -1.87938524157182         4 -8.23442238342932
+    ## 6 newton method root 2  1.53208888623796         7  5.55437759271229
 
-**function A: **  $f'_1(x) = \frac{2x}{1+x^2} + 2x$, $f''_1(x) = \frac{2(x^4 +x^2 +2)}{(1+x^2)^2}$
+1.  
 
-  **function B: ** $f'_2(x) = 4x^3 - 12x + 4$, $f''_2(x) = 12x^2 - 12$
+**function A: ** $f'_1(x) = \frac{2x}{1+x^2} + 2x$,
+$f''_1(x) = \frac{2(x^4 +x^2 +2)}{(1+x^2)^2}$
 
-2. 
+**function B: ** $f'_2(x) = 4x^3 - 12x + 4$, $f''_2(x) = 12x^2 - 12$
 
-To find whether functions are unimodal, we need to find root where first prime of function is 0 and second prime of function is positive.
+2.  
 
-For **function A**, it is obvious that the first derivative of function is 0 only when x = 0, and $f''_2(0) = 4 > 0$. Therefore, function A is unimodal.
+To find whether functions are unimodal, we need to find root where first
+prime of function is 0 and second prime of function is positive.
 
-For **function B**, we use `library(rootSolve)` and find `r length(critical_points_f2)` root for function B. `r ifelse(length(critical_points_f2)==1, "is", "is not")` unimodal.
+For **function A**, it is obvious that the first derivative of function
+is 0 only when x = 0, and $f''_2(0) = 4 > 0$. Therefore, function A is
+unimodal.
 
-3. 
+For **function B**, we use `library(rootSolve)` and find 3 root for
+function B. is not unimodal.
 
-The comparison of results for function A and B are presented above in tables.
+3.  
 
-With result from question 2, we know that root of function B are: `r critical_points_f2`, and their second derivatives are `r f2_second(critical_points_f2)`. Therefore, we only have 2 local minimum.
+The comparison of results for function A and B are presented above in
+tables.
 
-4. 
+With result from question 2, we know that root of function B are:
+-1.8794479, 0.3472831, 1.5320901, and their second derivatives are
+30.3878946, -10.5527331, 16.1676027. Therefore, we only have 2 local
+minimum.
 
-According to the comparison tables, we first verify that the root of f1 is at 0 and the global minimum can also be considered as $f(0)=0$ . For f2, we wisely choose the range and starting point in order to handle its multi-modal. And by comparison, we find the global minimum of f2 is `r f2(res_f2_bisec1[1])` at root = `r res_f2_bisec1[1]`. All methods agrees with the global minimum for both functions, which indicate our estimation of global minimum is valid.
+4.  
 
-  The newton's method is fastest in terms of iteration. 
+According to the comparison tables, we first verify that the root of f1
+is at 0 and the global minimum can also be considered as $f(0)=0$ . For
+f2, we wisely choose the range and starting point in order to handle its
+multi-modal. And by comparison, we find the global minimum of f2 is
+-8.2344224 at root = -1.8793852. All methods agrees with the global
+minimum for both functions, which indicate our estimation of global
+minimum is valid.
 
-  I think the Golden Search is the easiest method to apply if we only know a broad range because we don't need to know the expression of derivatives of function. Also, bisection and newton methods are root finding methods, but for golden search, we can implement it to obtain either maximum or minimum.
+The newton’s method is fastest in terms of iteration.
 
-  Newton's Method is most prone to failure or poor convergence when initial guess is bad. if initial guess is too far or its second derivative is too close to 0, then the method might diverge to another search region or crash(denominator=0).
+I think the Golden Search is the easiest method to apply if we only know
+a broad range because we don’t need to know the expression of
+derivatives of function. Also, bisection and newton methods are root
+finding methods, but for golden search, we can implement it to obtain
+either maximum or minimum.
 
-  Shape of function influences:
+Newton’s Method is most prone to failure or poor convergence when
+initial guess is bad. if initial guess is too far or its second
+derivative is too close to 0, then the method might diverge to another
+search region or crash(denominator=0).
 
-  - Bisection because it requires the signs of first derivative of the range we choose to be different. Therefore, if we don't properly choose the interval, other critical points might be included.
+Shape of function influences:
 
-  - Golden Search because it assumes unimodality of our function. If there is multiple modals, we need to isolate each of them.
+- Bisection because it requires the signs of first derivative of the
+  range we choose to be different. Therefore, if we don’t properly
+  choose the interval, other critical points might be included.
 
-  - Newton Method because the second derivative of the function(local curvature) can influence convergence significantly.
+- Golden Search because it assumes unimodality of our function. If there
+  is multiple modals, we need to isolate each of them.
+
+- Newton Method because the second derivative of the function(local
+  curvature) can influence convergence significantly.
 
 # Problem 2: Newton’s Method in Two Dimensions
 
-$g(x,y)$ is a 2D funciton
-$$g(x,y) = x^2+xy+y^2-4x-3y+7$$
-## Answer the folling questions:
+$g(x,y)$ is a 2D funciton $$g(x,y) = x^2+xy+y^2-4x-3y+7$$ \## Answer the
+folling questions:
 
-\begin{enumerate}
-\item Derive the gradient $\Delta g(x,y)$ and the Hessian matrix $\Delta^2 g(x,y)$.
-\item Implementation a Newton’s algorithm to find its minimizer.
-\item Choose two different starting values, and compare the resulting solutions, iteration counts and path to convergence
-\item Create a coutour plot of $g$ around its minium, and overlay the sequence of iterates from Newton’s method to show the path to the minimum.
-\end{enumerate}
+# Answer: your answer starts here…
 
+1.  $\Delta g(x,y) = (^{2x + y-4}_{x+2y-3})$ ,
+    $\Delta^2 g(x,y) = \left(\begin{array}{cc} 2 & 1\\ 1 & 2\end{array}\right)$
 
-# Answer: your answer starts here...
-
-1. $\Delta g(x,y) = (^{2x + y-4}_{x+2y-3})$ , $\Delta^2 g(x,y) = \left(\begin{array}{cc} 2 & 1\\ 1 & 2\end{array}\right)$
-```{r }
+``` r
 # 2. 
 set.seed(123)
 grad <- function(x, y) {
@@ -232,9 +248,21 @@ res_table1 <- newtonRalphson(0.8, 0.7, grad, hess)
 res_table2 <- newtonRalphson(10, -5, grad, hess)
 
 res_table1
+```
+
+    ##         [,1]      [,2] [,3] [,4] [,5]
+    ## res 0.800000 0.7000000 -1.7 -0.8    0
+    ##     1.666667 0.6666667  0.0  0.0    1
+
+``` r
 res_table2
+```
 
+    ##          [,1]       [,2]         [,3] [,4] [,5]
+    ## res 10.000000 -5.0000000 1.100000e+01   -3    0
+    ##      1.666667  0.6666667 1.776357e-15    0    1
 
+``` r
 g <- function(x, y) {
   x^2 + x*y + y^2 - 4*x - 3*y + 7
 }
@@ -263,40 +291,32 @@ points(res_table2[,1], res_table2[,2], col = "blue", pch = 19)
 # Add a legend
 legend("topright", legend = c("Start (0.8, 0.7)", "Start (10, -5)"), 
        col = c("red", "blue"), pch = 19, lwd = 2)
-
 ```
 
-
-
+![](homework-Newton-Optimization_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
 # Problem 3
-Suppose we have data $(x_i,y_i), i=1,...,n,$ with $y_i$ follows a conditional expotential distribution 
 
-
+Suppose we have data $(x_i,y_i), i=1,...,n,$ with $y_i$ follows a
+conditional expotential distribution
 
 $$Y_i \mid x_i \sim \exp(\lambda_i), \mbox{ where } \log(\lambda_i) =\alpha + \beta x_i.$$
 
 ## Please complete the following tasks:
 
-\begin{enumerate}
-\item Derive the log-likelihood of $(x_i,y_i)$, as well as its Gradient and Hession Matrix
-\item Generate a syntheic data with true $\alpha = 0.5$, true $\beta=1.2$ and sample size $n = 200$.
-\item Implement an Newton's algorthm to its MLE 
-\item Implement a modified Newton's algorithm, where you incoporate both of the step-having and ascent direction check. If a direction is not ascent, you can swith to a simpler gradient descent. 
-\item For a generalized linear models, one can replace the observed Hessian with the expected Hessian (the Fisher information), which might lead to stable updates akin to a Fisher scoring approach. Implement another modified newton's algorithm with Fisher scoring toestimate MLE.
-\item Compare the final parameter estimates, iteration counts and convergences of optimization, and summarize your findings.
-\end{enumerate}
-
 # Answer:
 
-1. Since the conditional distribution is exponential, we use its pdf and then we have $l(\alpha, \beta) = ln \prod^{n}_{i=1}[\lambda_i]e^{-\lambda_iy_i} = \sum^{n}_{i=1}[ln(\lambda_i) - \lambda_i y_i] = \sum^{n}_{i=1}[\alpha + \beta x_i-y_i e^{\alpha + \beta x_i}]$
+1.  Since the conditional distribution is exponential, we use its pdf
+    and then we have
+    $l(\alpha, \beta) = ln \prod^{n}_{i=1}[\lambda_i]e^{-\lambda_iy_i} = \sum^{n}_{i=1}[ln(\lambda_i) - \lambda_i y_i] = \sum^{n}_{i=1}[\alpha + \beta x_i-y_i e^{\alpha + \beta x_i}]$
 
-Gradient: $\nabla L(\alpha,\beta)=\begin{pmatrix}n - \sum_{i=1}^n y_i\, e^{\alpha+\beta x_i} \\[6pt]\sum_{i=1}^n x_i \;-\; \sum_{i=1}^n \bigl(x_i\, y_i\, e^{\alpha+\beta x_i}\bigr)\end{pmatrix}.$
+Gradient:
+$\nabla L(\alpha,\beta)=\begin{pmatrix}n - \sum_{i=1}^n y_i\, e^{\alpha+\beta x_i} \\[6pt]\sum_{i=1}^n x_i \;-\; \sum_{i=1}^n \bigl(x_i\, y_i\, e^{\alpha+\beta x_i}\bigr)\end{pmatrix}.$
 
-Hessian: $\nabla^2 L(\alpha,\beta)=\begin{pmatrix}-\sum_{i=1}^n y_i\, e^{\alpha+\beta x_i}&-\sum_{i=1}^n x_i\, y_i\,e^{\alpha+\beta x_i}\\[6pt]-\sum_{i=1}^n x_i\, y_i\, e^{\alpha+\beta x_i}&-\sum_{i=1}^n x_i^2\, y_i\, e^{\alpha+\beta x_i}\end{pmatrix}.$
+Hessian:
+$\nabla^2 L(\alpha,\beta)=\begin{pmatrix}-\sum_{i=1}^n y_i\, e^{\alpha+\beta x_i}&-\sum_{i=1}^n x_i\, y_i\,e^{\alpha+\beta x_i}\\[6pt]-\sum_{i=1}^n x_i\, y_i\, e^{\alpha+\beta x_i}&-\sum_{i=1}^n x_i^2\, y_i\, e^{\alpha+\beta x_i}\end{pmatrix}.$
 
-
-```{r}
+``` r
 # 2
 n <- 200
 alpha_true <- 0.5
@@ -501,4 +521,12 @@ results <- data.frame(Method = c("Original Newton", "Modified Newton", "Fisher S
 print(results)
 ```
 
-6. Based on the comparison table above, we found that all methods can find the MLE quickly and the modified newton ralphson with ascent check and step halving is the fastest as we expected. All three methods agrees on an optimum, which indicates our result is valid.
+    ##            Method     Alpha     Beta   LogLik Iterations
+    ## 1 Original Newton 0.2974917 1.554776 16.96356          8
+    ## 2 Modified Newton 0.2974917 1.554776 16.96356          5
+    ## 3  Fisher Scoring 0.2974917 1.554776 16.96356          7
+
+6.  Based on the comparison table above, we found that all methods can
+    find the MLE quickly and the modified newton ralphson with ascent
+    check and step halving is the fastest as we expected. All three
+    methods agrees on an optimum, which indicates our result is valid.
