@@ -1,0 +1,485 @@
+---
+title: "Homework on Bootstrapping"
+author: "Leave your name and uni here"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+# Problem 1: a randomized trial on an eye treatment
+
+An ophthalmologist has designed a randomized clinical trial to assess the effectiveness of a new laser treatment (blue) against the traditional one (red). The response to be evaluated is visual acuity, which is measured by counting the number of letters correctly identified in a standard eye test. Out of the 40 patients who are eligible for laser treatment, 20 have only one suitable eye for the treatment and received one treatment allocated at random. The remaining 20 patients have both eyes suitable for laser treatment and received both treatments randomly assigned to the two eyes. Therefore, the study includes both paired comparison and two-sample data. The data are presented in the following R script, where the first 20 rows represent patients who received treatments in both eyes., and the last 10 rows represent patients who received treatment in only one eye.
+
+\begin{verbatim}
+> blue <- c(4,69,87,35,39,79,31,79,65,95,68,
+           62,70,80,84,79,66,75,59,77,36,86,
+           39,85,74,72,69,85,85,72)
+> red <-c(62,80,82,83,0,81,28,69,48,90,63,
+        77,0,55,83,85,54,72,58,68,88,83,78,
+        30,58,45,78,64,87,65)
+> acui<-data.frame(str=c(rep(0,20),
+            rep(1,10)),red,blue)
+\end{verbatim}
+
+
+\vskip 20pt
+
+\textbf{Answer the following question:}
+ 
+\begin{enumerate}
+\item[(1)]  The treatment effect of the new laser treatment is defined as $$\Delta= E(Y\mid \mbox{trt = new/blue}) - E(Y\mid \mbox{trt = traditional/red}).$$  Please construct a statistics from  the collected data to estimate the treatment effect $\Delta$.
+\item[(2)] Propose a bootstrap algorithm to construct a 95\% confidence interval for the treatment effect. Describe your bootstrap procedure. Based on the resulting confidence interval, can the new treatment effectively improve visual acuity?
+\end{enumerate}
+
+## (1)
+
+```{r}
+blue <- c(4,69,87,35,39,79,31,79,65,95,68,
+           62,70,80,84,79,66,75,59,77,36,86,
+           39,85,74,72,69,85,85,72)
+red <-c(62,80,82,83,0,81,28,69,48,90,63,
+        77,0,55,83,85,54,72,58,68,88,83,78,
+        30,58,45,78,64,87,65)
+acui<-data.frame(str=c(rep(0,20),
+            rep(1,10)),red,blue)
+
+delta_paired <- mean(acui$blue[1:20] - acui$red[1:20]) 
+delta_indep <- mean(acui$blue[21:30]) - mean(acui$red[21:30]) 
+delta_est <- (20 * delta_paired + 10 * delta_indep) / 30
+
+```
+
+The estimated treatment effect $\triangle$ is `r delta_est`.
+
+## (2)
+
+```{r}
+set.seed(2)
+bootstrap_delta_ci <- function(data, B = 1000, conf = 0.95) {
+  n_paired <- 20
+  n_unpaired <- 10
+  
+  delta_boot <- numeric(B)
+  
+  for (b in 1:B) {
+    # Bootstrap sample of the paired data (first 20 rows)
+    idx_paired <- sample(1:n_paired, n_paired, replace = TRUE)
+    paired_blue <- data$blue[idx_paired]
+    paired_red  <- data$red[idx_paired]
+    delta_paired <- mean(paired_blue - paired_red)
+    
+    # Bootstrap sample of the unpaired data (last 10 rows)
+    idx_indep <- sample(21:30, 10, replace = TRUE)
+    
+    blue_mean <- mean(data$blue[idx_indep])
+    red_mean  <- mean(data$red[idx_indep])
+    delta_indep <- blue_mean - red_mean
+    
+    # Combined estimate
+    delta_boot[b] <- (20 * delta_paired + 10 * delta_indep) / 30
+  }
+  
+  # Percentile CI
+  alpha <- (1 - conf) / 2
+  ci <- quantile(delta_boot, probs = c(alpha, 1 - alpha))
+  
+  return(list(
+    estimate = mean(delta_boot),
+    ci_lower = ci[1],
+    ci_upper = ci[2],
+    boot_dist = delta_boot
+  ))
+}
+est_delta_ci <- bootstrap_delta_ci(acui)
+est_delta_ci$ci_lower
+est_delta_ci$ci_upper
+```
+Procedure:
+
+- Initialize confidence level, number of resamplings, and compared length of empty vector.
+
+- We first resampling 20 paired patients with replacement and then compute the mean difference in visual acuity to obtain `delta_paired`. Then we resampling 10 unpaired/independent patients with replacement and then compute the difference between mean blue and red responses to obtain `delta_indep`. Then we use the results to get weighted treatment effect estimate for this bootstrap sample. Finally, we obtain the confidence interval(chosen confidence level = 95%) from the vector of estimations by taking the values from specific quantiles(2.5%, 97.5%).
+
+Using above procedure, we obtain the confidence level of delta (`r est_delta_ci$ci_lower`, `r est_delta_ci$ci_upper`). 0 falls into this confidence interval, indicating that the difference between new and traditional treatments are not ststistically significant. Therefore, we conclude that this new treatment cannot effectively make improvement based on our results from bootstraping method.
+
+# Problem 2: Boston Housing Data
+
+In this problem, you will explore the famous **Boston Housing** data, which was assembled in the 1970s as part of a research study aiming to understand how various factors, particularly environmental quality, impact housing prices. It draws heavily on the 1970 U.S. Census for Boston-area housing data and incorporates additional environmental and geographic indicators (e.g., pollution levels, proximity to the Charles River, highway access).  The data is included in the MASS package in R, which can be loaded with
+
+```{r eval=FALSE}
+library(MASS)
+data("Boston")
+```
+
+The data contains 506 observation and 14 variables, with each row corresponds to a census tract in the Boston area. 
+
+- crim: per capita crime rate by town
+
+- zn: proportion of residential land zoned for lots over 25,000 sq.ft.
+
+- indus: proportion of non-retail business acres per town
+
+- chas: Charles River dummy variable (=1 if tract bounds river; 0 otherwise)
+
+- nox: nitric oxides concentration (parts per 10 million)
+
+- rm: average number of rooms per dwelling
+
+- age: proportion of owner-occupied units built prior to 1940
+
+- dis: weighted distances to five Boston employment centers
+
+- rad: index of accessibility to radial highways
+
+- tax: full-value property-tax rate per $10,000
+
+- ptratio: pupil-teacher ratio by town
+
+- black: 1000(Bk - 0.63)^2 where Bk is the proportion of Black residents by town
+
+- lstat: percentage of lower status of the population
+
+- medv: median value of owner-occupied homes in $1000s
+
+
+
+## 2.1 contructing bootstrap confidence interval in quantile regression
+
+Quantile regression is a modeling strategy that goes beyond predicting the average outcome. It models the conditional quantile of $Y$ given the covariates $X$. For instance, you can use quantile regression to look at how the median (50th percentile), the 25th percentile, or the 75th percentile of housing prices change with predictors. By doing so, you gain insights into how lower-priced homes vs. mid‐range homes vs. higher‐priced homes respond to changes in neighborhood and property characteristics.As we mentioned in the class, the asymptoic distribution of regression quantiles involves conditional densities, making direct Wald-type inference difficult.  In the problem, you will fit 
+ quantile regression over *medv* with five predictors, *rm*, *lstat*, *chas*, *nox* and *tax* at quantile levels 0.1, 0.25, 0.5, 0.75 and 0.9. 
+ 
+ In R code (using the quantreg package), you could write:
+ 
+
+```{r eval=FALSE}
+library(MASS)
+data("Boston")
+library(quantreg)
+
+fit_qr = rq(medv ~ rm + lstat + chas + nox + tax, data = Boston, tau = c(0.1,0.25,0.5,0.75,0.9))
+summary(fit_qr)
+
+```
+
+### Problem 2.1.1 
+
+Fit quantile regression models for *medv* (median home value) in the Boston dataset at quantile levels,0.1, 0.25, 0.5, 0.75 and 0.8,  using *rm* (average rooms), *lstat* (lower‐status population),*chas*(Charles River), *nox* (pollution level), and *tax* (property tax rate) as predictors. Implement a  paired bootstraping  with $B=1000$. For each replicate, re‐estimate the coefficients at all five quantiles and store them. Afterward, for each coefficient at each quantile, construct and compare 95% percentile and basic bootstrap confidence intervals. Basedon your results, please discuss whether certain predictors have stronger effects on lower-priced homes versus higher-priced ones, noting any differences in significance or interval width across quantiles.
+
+```{r warning=FALSE}
+library(MASS)
+data("Boston")
+library(quantreg)
+
+quantiles <- c(0.1, 0.25, 0.5, 0.75, 0.9)
+B <- 1000
+formula <- medv ~ rm + lstat + chas + nox + tax
+
+boot_coefs <- array(NA, dim = c(B, length(quantiles), length(coef(rq(formula, tau = 0.5, data = Boston)))),
+                    dimnames = list(NULL, paste0("Q", quantiles), names(coef(rq(formula, tau = 0.5, data = Boston)))))
+
+# Run paired bootstrap
+set.seed(2)  # for reproducibility
+n <- nrow(Boston)
+
+for (b in 1:B) {
+  idx <- sample(1:n, n, replace = TRUE)
+  boot_data <- Boston[idx, ]
+  
+  for (i in seq_along(quantiles)) {
+    fit <- rq(formula, tau = quantiles[i], data = boot_data)
+    boot_coefs[b, i, ] <- coef(fit)
+  }
+}
+
+# Estimate original model (on full data)
+orig_coefs <- sapply(quantiles, function(tau) coef(rq(formula, tau = tau, data = Boston)))
+
+# Compute CI for each coefficient and quantile
+ci_results <- list()
+
+for (j in 1:length(quantiles)) {
+  tau <- quantiles[j]
+  ci_list <- list()
+  
+  for (var in dimnames(boot_coefs)[[3]]) {
+    boot_vals <- boot_coefs[, j, var]
+    orig_val <- orig_coefs[, j][var]
+    
+    # Percentile CI
+    perc_ci <- quantile(boot_vals, probs = c(0.025, 0.975))
+    
+    # Basic CI: 2*theta_hat - quantile
+    basic_ci <- 2 * orig_val - rev(perc_ci)
+    
+    ci_list[[var]] <- list(
+      percentile = perc_ci,
+      basic = basic_ci,
+      estimate = orig_val
+    )
+  }
+  ci_results[[paste0("Q", tau)]] <- ci_list
+}
+
+var_names <- names(ci_results[[1]])
+
+# Create a list to store tables for each quantile
+summary_tables <- list()
+
+# Loop through each quantile
+for (q in names(ci_results)) {
+  coef_info <- ci_results[[q]]
+  
+  # For each variable, extract estimate, percentile CI, and basic CI
+  table_q <- data.frame(
+    Variable = var_names,
+    Estimate = sapply(var_names, function(v) coef_info[[v]]$estimate),
+    Perc_Lower = sapply(var_names, function(v) coef_info[[v]]$percentile[1]),
+    Perc_Upper = sapply(var_names, function(v) coef_info[[v]]$percentile[2]),
+    Basic_Lower = sapply(var_names, function(v) coef_info[[v]]$basic[1]),
+    Basic_Upper = sapply(var_names, function(v) coef_info[[v]]$basic[2])
+  )
+  
+  summary_tables[[q]] <- table_q
+}
+
+(summary_tables$Q0.1)[-1]
+summary_tables$Q0.25[-1]
+summary_tables$Q0.5[-1]
+summary_tables$Q0.75[-1]
+summary_tables$Q0.9[-1]
+
+```
+
+### Problem  2.1.2 
+
+Modify your bootstrap code to run in parallel using *foreach* + *%dopar%* or *mclapply* in R, report the time the runs with and without parallelization.
+
+```{r warning=FALSE}
+library(foreach) 
+library(doParallel) 
+library(parallel) 
+library(abind)
+
+set.seed(2)
+
+boot_coefs_serial <- list()
+B <- 1000
+
+time_serial <- system.time({
+  for (b in 1:B) {
+    idx <- sample(1:nrow(Boston), replace = TRUE)
+    boot_data <- Boston[idx, ]
+    
+    boot_coefs_serial[[b]] <- sapply(quantiles, function(tau) {
+      model <- rq(medv ~ rm + lstat + chas + nox + tax, data = boot_data, tau = tau)
+      coef(model)
+    })
+  }
+})
+# Register cores
+num_cores <- parallel::detectCores() - 1
+cl <- makeCluster(num_cores)
+registerDoParallel(cl)
+
+# Start timing
+time_parallel <- system.time({
+  boot_coefs_parallel <- foreach(b = 1:1000, .combine = "rbind", .packages = "quantreg") %dopar% {
+    idx <- sample(1:nrow(Boston), replace = TRUE)
+    boot_data <- Boston[idx, ]
+    sapply(quantiles, function(tau) {
+      model <- rq(medv ~ rm + lstat + chas + nox + tax, data = boot_data, tau = tau)
+      coef(model)
+    })
+  }
+})
+
+stopCluster(cl)  # Always stop the cluster
+
+time_mclapply <- system.time({
+  boot_coefs_mcl <- do.call(rbind, mclapply(1:1000, function(b) {
+    idx <- sample(1:nrow(Boston), replace = TRUE)
+    boot_data <- Boston[idx, ]
+    sapply(quantiles, function(tau) {
+      model <- rq(medv ~ rm + lstat + chas + nox + tax, data = boot_data, tau = tau)
+      coef(model)
+    })
+  }, mc.cores = num_cores))
+})
+
+print(time_serial)
+print(time_parallel)
+print(time_mclapply)
+```
+The runtime without parallelization is higher than the runtimes of both parallelizations method using foreach and mclapply. mcapply is the fastest in real world time but its total GPU time is the highest.
+
+## Problem 2.2 Penalized Linear regression
+
+### Problem  2.2.1 
+
+Randomly select 80% data (as training data) to fit a linear regression for *medv* and treat all other variables as potential predictors. Implement a lasso (L1-penalized) linear regression to model medv as a function of these variables. Use 5-fold cross-validation to select the optimal turning parameter $\lambda$. Report the cross-validation errors across the grid of $\lambda$s and identify the optimal $\lambda$ that minimizes the average validation error. 
+
+```{r 2.2.1a}
+library(caret)
+library(glmnet)
+
+# Split data
+set.seed(2)
+train_index <- createDataPartition(Boston$medv, p = 0.8, list = FALSE)
+train_dat <- Boston[train_index, ]
+test_dat <- Boston[-train_index, ]
+
+train_x <- model.matrix(medv ~ . - 1, data = train_dat)
+train_y <- train_dat$medv
+
+model.lasso <- cv.glmnet(train_x, train_y, alpha = 1, nfolds = 5) 
+plot(model.lasso)
+
+cv_results <- data.frame(
+  lambda = model.lasso$lambda,
+  cv_error = model.lasso$cvm
+)
+
+head(cv_results)
+
+best_lambda <- model.lasso$lambda.min
+cv_results[cv_results$lambda == best_lambda, ]
+
+```
+
+The optimal tuning parameter $\lambda$ is `r best_lambda`. And its corresponding CV error is `r cv_results[cv_results$lambda == best_lambda, 2]`. By taking natural log of the optimal $\lambda$, the result aligns with the above plot.
+
+### Problem 2.2.1 
+
+Using that selected $\lambda$, re-fit the lasso model to the full dataset. Record selected variables under this final model. Fit the training data with the selected variables, and use it to predict the housing prices in the remaining 20% testing data
+
+```{r 2.2.1b}
+full_x <- model.matrix(medv ~ . - 1, data = Boston)
+full_y <- Boston$medv
+
+final_lasso <- glmnet(full_x, full_y, alpha = 1, lambda = best_lambda)
+coef_lasso <- coef(final_lasso)
+selected_vars <- rownames(coef_lasso)[which(coef_lasso != 0)]
+selected_vars
+
+formula_str <- paste("medv ~", paste(selected_vars[-1], collapse = " + "))
+final_formula <- as.formula(formula_str)
+final_lm <- lm(final_formula, data = train_dat)
+pred_test <- predict(final_lm, newdata = test_dat)
+test_y <- test_dat$medv
+
+# Evaluate prediction performance
+test_mse <- mean((pred_test - test_y)^2)
+test_rmse <- sqrt(test_mse)
+
+cat("Test RMSE:", test_rmse, "\n")
+
+results_df <- data.frame(
+  Actual = test_y,
+  Predicted = pred_test
+)
+
+# Scatter plot with reference line
+ggplot(results_df, aes(x = Actual, y = Predicted)) +
+  geom_point(color = "steelblue", alpha = 0.6, size = 2) +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  labs(
+    title = "Predicted vs. Actual Housing Prices",
+    x = "Actual MEDV",
+    y = "Predicted MEDV"
+  ) +
+  theme_minimal()
+```
+By using the selected variables, we fit model and make prediction on the test data with RMSE = `r test_rmse`. The plot also implies how well the predictions are. We observe most of the predicted (blue) points are close to the red dashed line (where actual MEDV equals to predicted MEDV).
+
+### Problem 2.2.2 
+
+Following the Efron's bootstrap-smoothing idea, bootstrap the data, use 5-fold cross-validation to obtain a new set of selected variables and coefficient estimates for each bootstrap sample; $B=500%. Use each bootstrap model to predict the housing price in the reaming 20% testing data, and average them as the final predict. 
+
+```{r}
+test_x <- model.matrix(medv ~ . - 1, data = test_dat)
+
+B <- 500
+pred_matrix <- matrix(NA, nrow = nrow(test_dat), ncol = B)
+
+for (b in 1:B) {
+  boot_idx <- sample(1:nrow(train_dat), replace = TRUE)
+  boot_dat <- train_dat[boot_idx, ]
+  
+  boot_x <- model.matrix(medv ~ . - 1, data = boot_dat)
+  boot_y <- boot_dat$medv
+  
+  cv_boot <- cv.glmnet(boot_x, boot_y, alpha = 1, nfolds = 5)
+  
+  # Final model using lambda.min
+  final_boot <- glmnet(boot_x, boot_y, alpha = 1, lambda = cv_boot$lambda.min)
+  
+  # Predict on the test set
+  pred_matrix[, b] <- predict(final_boot, newx = test_x)
+}
+
+# Average the predictions as final predicts
+final_pred <- rowMeans(pred_matrix)
+
+actual_test <- test_dat$medv
+rmse_smooth <- sqrt(mean((final_pred - actual_test)^2))
+cat("Bootstrapped Smoothed RMSE on test set:", round(rmse_smooth, 4), "\n")
+
+# Visualization
+df_results2 <- data.frame(
+  Actual = actual_test,
+  Predicted = final_pred
+)
+
+ggplot(df_results2, aes(x = Actual, y = Predicted)) +
+  geom_point(alpha = 0.6, color = "#0072B2") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+  labs(title = "Bootstrap-Smoothed LASSO Predictions",
+       x = "Actual MEDV", y = "Smoothed Predicted MEDV") +
+  theme_minimal()
+```
+For both the evaluations(RMSE) and the visualization, the model's performance on prediction with bootstrap-smoothing idea are similar with the regular 5-fold CV's result. Further comparison will be provided in following section.
+
+### 2.2.3 Compare the prediction performance in 2.2.1 and 2.2.2, what do you observe?
+
+```{r}
+# R-squared
+sst <- sum((test_y - mean(test_y))^2)
+ssr_lasso <- sum((pred_test - test_y)^2)
+ssr_smooth <- sum((final_pred - test_y)^2)
+
+rsq_lasso <- 1 - ssr_lasso / sst
+rsq_smooth <- 1 - ssr_smooth / sst
+
+comparison_df <- data.frame(
+  Model = c("Standard LASSO", "Bootstrap-Smoothed LASSO"),
+  RMSE = c(test_rmse, rmse_smooth),
+  R_squared = c(rsq_lasso, rsq_smooth)
+)
+
+print(comparison_df)
+
+resid_lasso <- test_y - pred_test
+resid_smooth <- test_y - final_pred
+
+res_df <- data.frame(
+  Residual = c(resid_lasso, resid_smooth),
+  Model = rep(c("Standard LASSO", "Bootstrap-Smoothed LASSO"), each = length(test_y))
+)
+
+ggplot(res_df, aes(x = Residual, fill = Model)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Distribution of Residuals", x = "Residuals", y = "Density") +
+  theme_minimal()
+```
+
+By comparing metrices like RMSE, R-squared, and visualization of residuals, we can conclude that both models are good fit and perform well on the prediction task. Bootstrap-smoothed lasso does not significantly imporve the model fit and prediction due to its lower R-sqaured and higher RMSE than standard 5-fold CV lasso. But overall, two models are very similar with each other.
+
+
+
