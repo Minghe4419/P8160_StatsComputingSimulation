@@ -1,0 +1,25 @@
+---
+title: "project_report"
+author: "Minghe Wang"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+**Research Question:** "Which patient- or hospital-level factors are most predictive of readmission within 30 days among diabetic patients?"
+
+# Data Acquisition and Preprocessing
+
+# Exploratory Data Analysis
+
+# Model Development
+
+# Posterior Inference and Model evaluatin
+
+# Interpretation and Reporting
+
+
