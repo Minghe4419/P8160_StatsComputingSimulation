@@ -1,5 +1,5 @@
 ---
-title: "project_report"
+title: "Project Code"
 author: "Minghe Wang"
 date: "`r Sys.Date()`"
 output: pdf_document
@@ -7,12 +7,22 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
 ```
 
 
 **Research Question:** "Which patient- or hospital-level factors are most predictive of readmission within 30 days among diabetic patients?"
 
 # Data Acquisition and Preprocessing
+
+```{r load_data, eval=FALSE}
+diabete <- read_csv("./diabetic_data_2.csv")
+#head(diabete, 3)
+```
+
+```{r clean_data}
+
+```
 
 # Exploratory Data Analysis
 
