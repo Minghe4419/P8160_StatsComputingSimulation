@@ -8,6 +8,7 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(dplyr)
 ```
 
 
@@ -15,13 +16,30 @@ library(tidyverse)
 
 # Data Acquisition and Preprocessing
 
-```{r load_data, eval=FALSE}
+```{r load_data, message=FALSE}
 diabete <- read_csv("./diabetic_data_2.csv")
 #head(diabete, 3)
 ```
 
 ```{r clean_data}
+# Handle missingness
+diabete[diabete == "?"] <- NA
 
+# Set missingness thresholds
+col_na_thresh <- 0.05
+row_na_thresh <- 0.05
+
+# Filter out columns with >95% missing values
+diabete <- diabete %>%
+  dplyr::select(where(~ mean(is.na(.)) <= col_na_thresh))
+
+# Filter out rows with >30% missing values
+diabete <- diabete %>%
+  filter(rowMeans(is.na(.)) <= row_na_thresh)
+
+# Recode outcome variable
+diabete <- diabete %>%
+  mutate(readmission_binary = if_else(readmitted == "<30", 1, 0))
 ```
 
 # Exploratory Data Analysis
