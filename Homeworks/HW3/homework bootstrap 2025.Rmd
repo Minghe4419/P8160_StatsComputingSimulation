@@ -170,7 +170,7 @@ summary(fit_qr)
 
 ### Problem 2.1.1 
 
-Fit quantile regression models for *medv* (median home value) in the Boston dataset at quantile levels,0.1, 0.25, 0.5, 0.75 and 0.8,  using *rm* (average rooms), *lstat* (lower‐status population),*chas*(Charles River), *nox* (pollution level), and *tax* (property tax rate) as predictors. Implement a  paired bootstraping  with $B=1000$. For each replicate, re‐estimate the coefficients at all five quantiles and store them. Afterward, for each coefficient at each quantile, construct and compare 95% percentile and basic bootstrap confidence intervals. Basedon your results, please discuss whether certain predictors have stronger effects on lower-priced homes versus higher-priced ones, noting any differences in significance or interval width across quantiles.
+Fit quantile regression models for *medv* (median home value) in the Boston dataset at quantile levels,0.1, 0.25, 0.5, 0.75 and 0.8,  using *rm* (average rooms), *lstat* (lower‐status population),*chas*(Charles River), *nox* (pollution level), and *tax* (property tax rate) as predictors. Implement a  paired bootstraping  with $B=1000$. For each replicate, re‐estimate the coefficients at all five quantiles and store them. Afterward, for each coefficient at each quantile, construct and compare 95% percentile and basic bootstrap confidence intervals. Based on your results, please discuss whether certain predictors have stronger effects on lower-priced homes versus higher-priced ones, noting any differences in significance or interval width across quantiles.
 
 ```{r warning=FALSE}
 library(MASS)
@@ -249,13 +249,14 @@ for (q in names(ci_results)) {
   summary_tables[[q]] <- table_q
 }
 
-(summary_tables$Q0.1)[-1]
+summary_tables$Q0.1[-1]
 summary_tables$Q0.25[-1]
 summary_tables$Q0.5[-1]
 summary_tables$Q0.75[-1]
 summary_tables$Q0.9[-1]
 
 ```
+First, we notice `nox` has strong effects on highest and cheapest group of housing, but its confidence interval on medium price housing always includes 0, indicating this could be a insignificant/ non-influencial predictor at given prices. Then for other predictors: `rm` and `chas` have stronger effect for expensive homes; lstat has stronger effect for cheaper homes; `tax`'s effect as a variable is negligable.
 
 ### Problem  2.1.2 
 
@@ -480,6 +481,7 @@ ggplot(res_df, aes(x = Residual, fill = Model)) +
 ```
 
 By comparing metrices like RMSE, R-squared, and visualization of residuals, we can conclude that both models are good fit and perform well on the prediction task. Bootstrap-smoothed lasso does not significantly imporve the model fit and prediction due to its lower R-sqaured and higher RMSE than standard 5-fold CV lasso. But overall, two models are very similar with each other.
+
 
 
 

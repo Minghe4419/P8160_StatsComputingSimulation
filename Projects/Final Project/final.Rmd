@@ -1,0 +1,29 @@
+---
+title: "Advanced Statsitical Computing Final Project"
+subtitle: Bayesian Hierarchical Modeling of Hospital Readmissions for Diabetic Patients
+output:
+  html_document:
+    df_print: paged
+---
+Hospital readmission rates are a major concern in healthcare quality and cost. In this project, you will analyze the “Diabetes 130 US hospitals” dataset,  which contains over 100,000 hospital admissions for diabetic patients across 130 hospitals (data collected from 1999 to 2008) available at the UC Irvine Machine Learning Repository (https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008). Your outcome variable is Readmission, indicating whether a patient was readmitted within 30 days (binary: readmitted within 30 days vs. not). Your primary research question is:
+
+
+**"Which patient- or hospital-level factors are most predictive of readmission within 30 days among diabetic patients?"**
+
+To answer this, you will build a Bayesian Hierarchical Logistic Regression model.
+
+- Project Tasks: 
+
+1. **Data Acquisition and Preprocessing**: download the data from the UCI Machine Learning Repository, and filter out rows and columns with an excessive proportion of missing values to ensure computational manageability.Recode the Readmission variable into a binary outcome (e.g., “<30 days” = 1, “>=30 days or No” = 0).
+
+2. **Exploratory Data Analysis**: Compute summary statistics or frequency tables for key variables; Use varialzaiton tools to show the disributions of variables. 
+
+3. **Model**: Deveop a Bayesian Hierarchical Logistic Regression model with well-defined model equations. Your modle should include patient-level predictors, and random intercept for hosptials. Justify your choice of priors for the fixed effects and variance components
+
+4. **MCMC Implementation**:Implement both MH and HMH algorithms,  analyze and compare trace plots, computing time, and convergence diagnostics.
+
+5. **Posterior Inference and Model evaluatin**: Summarize posterior estimates for both fixed effects and random effects, and compute credible intervals for key parameters.
+
+6. **Interpretation and Reporting**: Interpret the estimated coefficients in the context of patient-level and hospital-level factors. Explain how your findings could help inform healthcare policy or clinical decision-making.
+
+
